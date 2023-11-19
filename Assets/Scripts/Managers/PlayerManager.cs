@@ -6,9 +6,8 @@ using UnityEngine;
 public class PlayerManager : NetworkedStaticInstanceWithLogger<PlayerManager>
 {
     [SerializeField] Transform _playerPrefab;
-    [SerializeField] Transform _playerSpawnArea;
+    [SerializeField] List<Transform> _playerSpawnPoints;
     [SerializeField] Transform _playerContainer;
-    [SerializeField] float _playerSpawnMaxDistance = 9f;
 
     public static PlayerController LocalPlayer { get; private set; }
 
@@ -84,8 +83,8 @@ public class PlayerManager : NetworkedStaticInstanceWithLogger<PlayerManager>
             return;
         }
 
-        Vector3 randomSpawnPoint = new(UnityEngine.Random.Range(this._playerSpawnArea.position.x - this._playerSpawnMaxDistance, this._playerSpawnArea.position.x + this._playerSpawnMaxDistance), this._playerSpawnArea.position.y, UnityEngine.Random.Range(this._playerSpawnArea.position.z - this._playerSpawnMaxDistance, this._playerSpawnArea.position.z + this._playerSpawnMaxDistance));
-        Transform playerTransform = Instantiate(this._playerPrefab, randomSpawnPoint, this._playerSpawnArea.rotation);
+        Transform spawnTransform = this._playerSpawnPoints[clientId % 2 == 0 ? 0 : 1];
+        Transform playerTransform = Instantiate(this._playerPrefab, spawnTransform.position, spawnTransform.rotation);
         NetworkObject playerNetworkObject = playerTransform.GetComponent<NetworkObject>();
         playerNetworkObject.SpawnWithOwnership(clientId);
         playerNetworkObject.TrySetParent(this._playerContainer);
