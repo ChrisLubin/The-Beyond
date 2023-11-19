@@ -2,7 +2,7 @@ public static class Constants
 {
     public static class TagNames
     {
-        public static string Damagable = "Damagable";
+        public static string Player = "Player";
     }
 
     public static class LayerNames

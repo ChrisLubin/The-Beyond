@@ -2041,7 +2041,7 @@ GameObject:
   - component: {fileID: 8525267778529288352}
   - component: {fileID: 8036864527934307686}
   - component: {fileID: 5314294912217748138}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Player
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -4225,7 +4225,7 @@ MonoBehaviour:
     FieldOfView: 60
     OrthographicSize: 10
     NearClipPlane: 0.45
-    FarClipPlane: 10000
+    FarClipPlane: 20000
     Dutch: 0
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
@@ -4456,7 +4456,7 @@ MonoBehaviour:
     FieldOfView: 40
     OrthographicSize: 10
     NearClipPlane: 0.2
-    FarClipPlane: 10000
+    FarClipPlane: 20000
     Dutch: 0
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
