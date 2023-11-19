@@ -8,4 +8,6 @@ public class Systems : PersistentSingleton<Systems>
         QualitySettings.vSyncCount = 0;
         Application.targetFrameRate = Debug.isDebugBuild ? 45 : 120;
     }
+
+    private void Update() => Physics.SyncTransforms();
 }
