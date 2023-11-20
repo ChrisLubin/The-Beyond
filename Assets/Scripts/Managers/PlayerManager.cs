@@ -10,6 +10,7 @@ public class PlayerManager : NetworkedStaticInstanceWithLogger<PlayerManager>
     [SerializeField] Transform _playerContainer;
 
     public static PlayerController LocalPlayer { get; private set; }
+    public static PlayerInteractorController LocalPlayerInteractorController { get; private set; }
 
     private IDictionary<ulong, PlayerController> _alivePlayersMap = new Dictionary<ulong, PlayerController>();
 
@@ -53,6 +54,7 @@ public class PlayerManager : NetworkedStaticInstanceWithLogger<PlayerManager>
         if (clientId == MultiplayerSystem.LocalClientId)
         {
             PlayerManager.LocalPlayer = player;
+            PlayerManager.LocalPlayerInteractorController = player.GetComponent<PlayerInteractorController>();
             PlayerManager.OnLocalPlayerSpawn?.Invoke();
         }
     }

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
+using Unity.Netcode;
 
 /// <summary>
 /// A static class for general helpful methods
@@ -17,5 +17,15 @@ public static class Helpers
         }
 
         return list.ToArray<T>();
+    }
+
+    public static ClientRpcParams GenerateRpcParamsToClient(this ulong playerClientId)
+    {
+        ulong[] allClientIds = Helpers.ToArray(NetworkManager.Singleton.ConnectedClientsIds);
+
+        return new ClientRpcParams()
+        {
+            Send = new ClientRpcSendParams { TargetClientIds = allClientIds.Where((ulong clientId) => clientId == playerClientId).ToArray() }
+        };
     }
 }

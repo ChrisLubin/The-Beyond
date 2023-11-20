@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Unity.Netcode;
+using UnityEngine;
 #if ENABLE_INPUT_SYSTEM 
 using UnityEngine.InputSystem;
 #endif
@@ -12,7 +13,7 @@ namespace StarterAssets
 #if ENABLE_INPUT_SYSTEM 
     [RequireComponent(typeof(PlayerInput))]
 #endif
-    public class ThirdPersonController : MonoBehaviour
+    public class ThirdPersonController : NetworkBehaviour
     {
         [Header("Player")]
         [Tooltip("Move speed of the character in m/s")]
@@ -103,6 +104,7 @@ namespace StarterAssets
 #endif
         private Animator _animator;
         private CharacterController _controller;
+        private PlayerInteractorController _interactorController;
         private StarterAssetsInputs _input;
         private GameObject _mainCamera;
 
@@ -127,6 +129,7 @@ namespace StarterAssets
             _cinemachineTargetYaw = CinemachineCameraTarget.transform.rotation.eulerAngles.y;
             _hasAnimator = TryGetComponent(out _animator);
             _controller = GetComponent<CharacterController>();
+            _interactorController = GetComponent<PlayerInteractorController>();
             _input = GetComponent<StarterAssetsInputs>();
 #if ENABLE_INPUT_SYSTEM
             _playerInput = GetComponent<PlayerInput>();
@@ -151,6 +154,26 @@ namespace StarterAssets
             _fallTimeoutDelta = FallTimeout;
         }
 
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+
+            if (this.IsOwner)
+            {
+                this._interactorController.OnDidInteraction += this.OnPlayerDidInteraction;
+            }
+        }
+
+        public override void OnDestroy()
+        {
+            base.OnDestroy();
+
+            if (this.IsOwner)
+            {
+                this._interactorController.OnDidInteraction -= this.OnPlayerDidInteraction;
+            }
+        }
+
         private void Update()
         {
             _hasAnimator = TryGetComponent(out _animator);
@@ -172,6 +195,23 @@ namespace StarterAssets
             _animIDJump = Animator.StringToHash("Jump");
             _animIDFreeFall = Animator.StringToHash("FreeFall");
             _animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
+        }
+
+        private void OnPlayerDidInteraction(InteractionType interaction)
+        {
+            switch (interaction)
+            {
+                case InteractionType.EnterVehicle:
+                    this.enabled = false;
+                    this._controller.enabled = false;
+                    break;
+                case InteractionType.ExitVehicle:
+                    this.enabled = true;
+                    this._controller.enabled = true;
+                    break;
+                default:
+                    break;
+            }
         }
 
         private void GroundedCheck()
