@@ -11010,15 +11010,39 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1202538380855617741, guid: 67451839d99ea1a49b8aa33a9015d951, type: 3}
       propertyPath: m_Name
-      value: HoverCraft
+      value: Spaceship
       objectReference: {fileID: 0}
     - target: {fileID: 1202538380855617741, guid: 67451839d99ea1a49b8aa33a9015d951, type: 3}
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 1202538380855617741, guid: 67451839d99ea1a49b8aa33a9015d951, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1399101995692290922, guid: 67451839d99ea1a49b8aa33a9015d951, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1399101995692290922, guid: 67451839d99ea1a49b8aa33a9015d951, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1399101995692290922, guid: 67451839d99ea1a49b8aa33a9015d951, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1399101995692290922, guid: 67451839d99ea1a49b8aa33a9015d951, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
     - target: {fileID: 4077479617393269495, guid: 67451839d99ea1a49b8aa33a9015d951, type: 3}
       propertyPath: GlobalObjectIdHash
       value: 3364738013
+      objectReference: {fileID: 0}
+    - target: {fileID: 4373242341973291343, guid: 67451839d99ea1a49b8aa33a9015d951, type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5016363936511069575, guid: 67451839d99ea1a49b8aa33a9015d951, type: 3}
       propertyPath: m_LocalPosition.x
@@ -11026,7 +11050,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5016363936511069575, guid: 67451839d99ea1a49b8aa33a9015d951, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -107.213
+      value: -106.85
       objectReference: {fileID: 0}
     - target: {fileID: 5016363936511069575, guid: 67451839d99ea1a49b8aa33a9015d951, type: 3}
       propertyPath: m_LocalPosition.z
