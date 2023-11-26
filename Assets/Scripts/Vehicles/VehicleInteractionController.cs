@@ -26,6 +26,11 @@ public class VehicleInteractionController : NetworkBehaviourWithLogger<VehicleIn
             this._logger.Log("Local player is trying to exit vehicle");
             this._networkController.ExitVehicleServerRpc(this._movementController.Velocity);
         }
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+            this._logger.Log("Local player is trying to change seats");
+            this._networkController.ChangeSeatServerRpc(this._movementController.Velocity);
+        }
     }
 
     public void DoInteract()

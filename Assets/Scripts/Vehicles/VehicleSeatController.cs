@@ -9,26 +9,14 @@ public class VehicleSeatController : NetworkBehaviourWithLogger<VehicleSeatContr
     private VehicleNetworkController _networkController;
     private VehicleInteractionController _interactionController;
 
-    public const ulong NO_DRIVER_CLIENT_ID = ulong.MaxValue - 1;
-    private const ulong _EMPTY_SEAT_PLAYER_ID = ulong.MaxValue;
+    public const ulong EMPTY_SEAT_PLAYER_ID = ulong.MaxValue;
     private const float _MAX_SEAT_DESYNC_THRESHOLD = 0.1f;
 
     [SerializeField] private List<Transform> _seatTransforms;
     public bool IsLocalPlayerInVehicle { get; private set; } = false;
     public bool IsLocalPlayerDriver { get; private set; } = false;
 
-    public bool HasAvailableSeat
-    {
-        get
-        {
-            foreach (SeatData seat in this._networkController.Seats)
-            {
-                if (seat.PlayerId == _EMPTY_SEAT_PLAYER_ID) { return true; }
-            }
-
-            return false;
-        }
-    }
+    public bool HasAvailableSeat { get => this._networkController.Seats.ToArray().Any(seat => seat.PlayerId == EMPTY_SEAT_PLAYER_ID); }
 
     [SerializeField] private float _exitSeatDistance = 1f;
 
@@ -47,7 +35,7 @@ public class VehicleSeatController : NetworkBehaviourWithLogger<VehicleSeatContr
         if (!this.IsHost) { return; }
 
         for (int i = 0; i < this._seatTransforms.Count; i++)
-            this._networkController.Seats.Add(new(_EMPTY_SEAT_PLAYER_ID, i));
+            this._networkController.Seats.Add(new(EMPTY_SEAT_PLAYER_ID, i));
     }
 
     public override void OnDestroy()
@@ -84,7 +72,7 @@ public class VehicleSeatController : NetworkBehaviourWithLogger<VehicleSeatContr
         if (!this.IsHost) { return false; }
         if (seats.Any(seat => seat.PlayerId == playerId)) { return false; }
 
-        return seats.Where(seat => seat.PlayerId == _EMPTY_SEAT_PLAYER_ID).Count() > 0;
+        return seats.Where(seat => seat.PlayerId == EMPTY_SEAT_PLAYER_ID).Count() > 0;
     }
 
     public void AddPlayer(ulong clientId)
@@ -100,7 +88,7 @@ public class VehicleSeatController : NetworkBehaviourWithLogger<VehicleSeatContr
         for (int i = 0; i < this._networkController.Seats.Count; i++)
         {
             SeatData seat = this._networkController.Seats[i];
-            if (seat.PlayerId != _EMPTY_SEAT_PLAYER_ID) { continue; }
+            if (seat.PlayerId != EMPTY_SEAT_PLAYER_ID) { continue; }
             if (seat.SeatIndex == 0)
             {
                 this._networkController.DriverClientId.Value = clientId;
@@ -133,15 +121,65 @@ public class VehicleSeatController : NetworkBehaviourWithLogger<VehicleSeatContr
             if (seat.PlayerId != clientId) { continue; }
             if (seat.SeatIndex == 0)
             {
-                this._networkController.DriverClientId.Value = NO_DRIVER_CLIENT_ID;
+                this._networkController.DriverClientId.Value = EMPTY_SEAT_PLAYER_ID;
                 this.NetworkObject.RemoveOwnership();
             }
 
-            seat.PlayerId = _EMPTY_SEAT_PLAYER_ID;
+            seat.PlayerId = EMPTY_SEAT_PLAYER_ID;
             this._networkController.Seats[i] = seat;
             player.NetworkObject.TryRemoveParent();
             this._logger.Log($"Unparented player {clientId} from seat index {seat.SeatIndex}");
             break;
+        }
+    }
+
+    public bool CanChangeSeat(ulong playerId) => this.IsHost && this.isInVehicle(playerId) || this.HasAvailableSeat;
+
+    public void ChangeSeat(ulong playerId)
+    {
+        if (!this.CanChangeSeat(playerId)) { return; }
+        if (!PlayerManager.Instance.TryGetPlayer(playerId, out PlayerController player))
+        {
+            this._logger.Log($"Could not find player with the client ID {playerId}", Logger.LogLevel.Error);
+            return;
+        }
+
+        SeatData[] seats = this._networkController.Seats.ToArray();
+        int playerCurrentSeatIndex = seats.FirstOrDefault(seat => seat.PlayerId == playerId).SeatIndex;
+
+        for (int i = playerCurrentSeatIndex; i < seats.Count() + playerCurrentSeatIndex; i++)
+        {
+            int seatIndex = i % seats.Count();
+            SeatData seat = this._networkController.Seats[seatIndex];
+
+            // Don't use i anymore, use seatIndex
+            if (seatIndex == playerCurrentSeatIndex)
+            {
+                seat.PlayerId = EMPTY_SEAT_PLAYER_ID;
+                this._networkController.Seats[seatIndex] = seat;
+
+                if (seatIndex == 0)
+                {
+                    this._networkController.DriverClientId.Value = EMPTY_SEAT_PLAYER_ID;
+                    this.NetworkObject.RemoveOwnership();
+                }
+                continue;
+            }
+
+            if (seat.PlayerId == EMPTY_SEAT_PLAYER_ID)
+            {
+                seat.PlayerId = playerId;
+                this._networkController.Seats[seatIndex] = seat;
+                player.NetworkObject.TrySetParent(this._seatTransforms[seatIndex]);
+
+                if (seatIndex == 0)
+                {
+                    this._networkController.DriverClientId.Value = playerId;
+                    this.NetworkObject.ChangeOwnership(playerId);
+                }
+                this._logger.Log($"Moved player {playerId} to seat index {seatIndex}");
+                break;
+            }
         }
     }
 
@@ -173,7 +211,7 @@ public class VehicleSeatController : NetworkBehaviourWithLogger<VehicleSeatContr
             SeatData seat = this._networkController.Seats[i];
             if (seat.PlayerId != player.ClientId) { continue; }
 
-            seat.PlayerId = _EMPTY_SEAT_PLAYER_ID;
+            seat.PlayerId = EMPTY_SEAT_PLAYER_ID;
             this._networkController.Seats[i] = seat;
             this._logger.Log($"Unparented player {player.ClientId} from seat index {seat.SeatIndex}");
             break;

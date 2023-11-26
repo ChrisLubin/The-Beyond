@@ -39,7 +39,7 @@ public class SpaceshipMovementController : NetworkBehaviour
     private VehicleSeatController _seatController;
     private VehicleNetworkController _networkController;
 
-    public Vector3 Velocity { get => this._rigidBody.velocity; set => this._rigidBody.velocity = value; }
+    public Vector3 Velocity { get => this._rigidBody.velocity; }
 
     private void Awake()
     {
@@ -199,4 +199,5 @@ public class SpaceshipMovementController : NetworkBehaviour
     public override void OnGainedOwnership() => this.enabled = true;
     public override void OnLostOwnership() => this.enabled = false;
     private void OnDriverChange(ulong _, ulong newDriverId) => this.enabled = newDriverId == MultiplayerSystem.LocalClientId;
+    public void SetVelocity(Vector3 velocity) => this._rigidBody.velocity = velocity; // Used so momentum is carried between owner changes
 }

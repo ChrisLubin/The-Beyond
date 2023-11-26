@@ -10,7 +10,7 @@ public class VehicleNetworkController : NetworkBehaviour
     private SpaceshipMovementController _movementController;
 
     public NetworkList<SeatData> Seats;
-    public NetworkVariable<ulong> DriverClientId = new(NO_DRIVER_CLIENT_ID, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public NetworkVariable<ulong> DriverClientId = new(EMPTY_SEAT_PLAYER_ID, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     private void Awake()
     {
@@ -47,10 +47,10 @@ public class VehicleNetworkController : NetworkBehaviour
         bool wasPlayerDriver = this.DriverClientId.Value == playerClientId;
 
         this._seatController.RemovePlayer(playerClientId);
-        if (wasPlayerDriver)
-            this._movementController.Velocity = vehicleVelocity; // Used so momentum is carried between owner changes
-
         this.ExitVehicleClientRpc(playerClientId);
+
+        if (wasPlayerDriver)
+            this._movementController.SetVelocity(vehicleVelocity);
     }
 
     [ClientRpc]
@@ -67,4 +67,25 @@ public class VehicleNetworkController : NetworkBehaviour
                 player.GetComponent<CharacterController>().enabled = true;
         }
     }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void ChangeSeatServerRpc(Vector3 clientVehicleVelocity = default, ServerRpcParams serverRpcParams = default)
+    {
+        ulong playerClientId = serverRpcParams.Receive.SenderClientId;
+        if (!this._seatController.CanChangeSeat(playerClientId)) { return; }
+        bool wasPlayerDriver = this.DriverClientId.Value == playerClientId;
+        Vector3 hostVehicleVelocity = this._movementController.Velocity;
+
+        this._seatController.ChangeSeat(playerClientId);
+
+        if (wasPlayerDriver)
+            this._movementController.SetVelocity(clientVehicleVelocity);
+
+        bool isPlayerNowDriver = this.DriverClientId.Value == playerClientId;
+        if (isPlayerNowDriver)
+            this.ChangeSeatClientRpc(hostVehicleVelocity, playerClientId.GenerateRpcParamsToClient());
+    }
+
+    [ClientRpc]
+    public void ChangeSeatClientRpc(Vector3 vehicleVelocity, ClientRpcParams _ = default) => this._movementController.SetVelocity(vehicleVelocity);
 }
