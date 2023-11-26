@@ -11,7 +11,7 @@ public class PlayerInteractorController : NetworkBehaviorAutoDisable<PlayerInter
     {
         if (!this.IsOwner) { return; }
 
-        if (Input.GetKeyDown(KeyCode.E))
+        if (Input.GetKeyDown(KeyCode.T))
         {
             this.TryDoInteraction();
         }

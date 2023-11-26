@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Netcode;
@@ -12,6 +13,18 @@ public static class Helpers
         List<T> list = new();
 
         foreach (T element in readOnlyList)
+        {
+            list.Add(element);
+        }
+
+        return list.ToArray<T>();
+    }
+
+    public static T[] ToArray<T>(this NetworkList<T> networkList) where T : unmanaged, IEquatable<T>
+    {
+        List<T> list = new();
+
+        foreach (T element in networkList)
         {
             list.Add(element);
         }

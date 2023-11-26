@@ -8,6 +8,7 @@ public class PlayerManager : NetworkedStaticInstanceWithLogger<PlayerManager>
     [SerializeField] Transform _playerPrefab;
     [SerializeField] List<Transform> _playerSpawnPoints;
     [SerializeField] Transform _playerContainer;
+    [SerializeField] Transform _debugSpawnPoint;
 
     public static PlayerController LocalPlayer { get; private set; }
     public static PlayerInteractorController LocalPlayerInteractorController { get; private set; }
@@ -86,7 +87,7 @@ public class PlayerManager : NetworkedStaticInstanceWithLogger<PlayerManager>
         }
 
         Transform spawnTransform = this._playerSpawnPoints[clientId % 2 == 0 ? 0 : 1];
-        Transform playerTransform = Instantiate(this._playerPrefab, spawnTransform.position, spawnTransform.rotation);
+        Transform playerTransform = Instantiate(this._playerPrefab, Debug.isDebugBuild ? this._debugSpawnPoint.position : spawnTransform.position, spawnTransform.rotation);
         NetworkObject playerNetworkObject = playerTransform.GetComponent<NetworkObject>();
         playerNetworkObject.SpawnWithOwnership(clientId);
         playerNetworkObject.TrySetParent(this._playerContainer);

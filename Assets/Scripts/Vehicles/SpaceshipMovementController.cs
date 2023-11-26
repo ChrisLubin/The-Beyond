@@ -1,8 +1,8 @@
-using StarterAssets;
+using Unity.Netcode;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
-public class SpaceshipMovementController : MonoBehaviour
+public class SpaceshipMovementController : NetworkBehaviour
 {
     [Header("Movement Attributes")]
     [SerializeField] private float _yawTorque = 100f;
@@ -36,18 +36,38 @@ public class SpaceshipMovementController : MonoBehaviour
     private Vector2 _pitchYaw;
 
     private Rigidbody _rigidBody;
-    private StarterAssetsInputs _input;
+    private VehicleInteractionController _interactionController;
+    private VehicleSeatController _seatController;
+    private VehicleNetworkController _networkController;
 
     private void Awake()
     {
         this._rigidBody = GetComponent<Rigidbody>();
-        this._input = GetComponent<StarterAssetsInputs>();
+        this._interactionController = GetComponent<VehicleInteractionController>();
+        this._seatController = GetComponent<VehicleSeatController>();
+        this._networkController = GetComponent<VehicleNetworkController>();
     }
 
     private void Start() => this._currentBoostAmount = this._maxBoostAmount;
 
+    public override void OnNetworkSpawn()
+    {
+        base.OnNetworkSpawn();
+        this._interactionController.OnDidInteraction += this.OnDidInteraction;
+        this._networkController.DriverClientId.OnValueChanged += this.OnDriverChange;
+    }
+
+    public override void OnDestroy()
+    {
+        base.OnDestroy();
+        this._interactionController.OnDidInteraction -= this.OnDidInteraction;
+        this._networkController.DriverClientId.OnValueChanged -= this.OnDriverChange;
+    }
+
     private void FixedUpdate()
     {
+        if (!this.IsOwner || !this._seatController.IsDriver(MultiplayerSystem.LocalClientId)) { return; }
+
         HandleInputs();
         HandleBoosting();
         HandleMovement();
@@ -121,7 +141,7 @@ public class SpaceshipMovementController : MonoBehaviour
 
     private void HandleInputs()
     {
-        this._pitchYaw = _input.look;
+        this._pitchYaw = InputSystem.look;
 
         this._thrustScale = Mathf.Clamp(this._thrustScale + (Input.mouseScrollDelta.y * 0.02f), 0.1f, 1f);
 
@@ -168,4 +188,22 @@ public class SpaceshipMovementController : MonoBehaviour
         // Boost
         this._isBoosting = Input.GetKey(KeyCode.LeftShift);
     }
+
+    private void OnDidInteraction(InteractionType interaction)
+    {
+        switch (interaction)
+        {
+            case InteractionType.EnterVehicle:
+                if (this._seatController.IsDriver(MultiplayerSystem.LocalClientId))
+                    this.enabled = true;
+                break;
+            case InteractionType.ExitVehicle:
+                this.enabled = false;
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void OnDriverChange(ulong _, ulong newDriverId) => this.enabled = newDriverId == MultiplayerSystem.LocalClientId;
 }

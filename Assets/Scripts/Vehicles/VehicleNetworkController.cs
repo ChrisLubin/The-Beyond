@@ -1,5 +1,7 @@
 using Unity.Netcode;
+using UnityEngine;
 using static VehicleSeatController;
+using Cysharp.Threading.Tasks;
 
 public class VehicleNetworkController : NetworkBehaviour
 {
@@ -7,6 +9,7 @@ public class VehicleNetworkController : NetworkBehaviour
     private VehicleInteractionController _interactionController;
 
     public NetworkList<SeatData> Seats;
+    public NetworkVariable<ulong> DriverClientId = new(NO_DRIVER_CLIENT_ID, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     private void Awake()
     {
@@ -22,11 +25,17 @@ public class VehicleNetworkController : NetworkBehaviour
         if (!this._seatController.CanAddPlayer(playerClientId)) { return; }
 
         this._seatController.AddPlayer(playerClientId);
-        this.EnterVehicleClientRpc(playerClientId.GenerateRpcParamsToClient());
+        this.EnterVehicleClientRpc(playerClientId);
     }
 
     [ClientRpc]
-    public void EnterVehicleClientRpc(ClientRpcParams _) => this._interactionController.DidInteraction(InteractionType.EnterVehicle);
+    public void EnterVehicleClientRpc(ulong playerId)
+    {
+        if (playerId == MultiplayerSystem.LocalClientId)
+            this._interactionController.DidInteraction(InteractionType.EnterVehicle);
+        else if (PlayerManager.Instance.TryGetPlayer(playerId, out PlayerController player))
+            player.GetComponent<CharacterController>().enabled = false;
+    }
 
     [ServerRpc(RequireOwnership = false)]
     public void ExitVehicleServerRpc(ServerRpcParams serverRpcParams = default)
@@ -35,9 +44,21 @@ public class VehicleNetworkController : NetworkBehaviour
         if (!this._seatController.CanRemovePlayer(playerClientId)) { return; }
 
         this._seatController.RemovePlayer(playerClientId);
-        this.ExitVehicleClientRpc(playerClientId.GenerateRpcParamsToClient());
+        this.ExitVehicleClientRpc(playerClientId);
     }
 
     [ClientRpc]
-    public void ExitVehicleClientRpc(ClientRpcParams _) => this._interactionController.DidInteraction(InteractionType.ExitVehicle);
+    public void ExitVehicleClientRpc(ulong playerId) => this.ExitVehicle(playerId);
+
+    private async void ExitVehicle(ulong playerId)
+    {
+        if (playerId == MultiplayerSystem.LocalClientId)
+            this._interactionController.DidInteraction(InteractionType.ExitVehicle);
+        else
+        {
+            await UniTask.WaitForSeconds(3f);
+            if (!this._seatController.isInVehicle(playerId) && PlayerManager.Instance.TryGetPlayer(playerId, out PlayerController player))
+                player.GetComponent<CharacterController>().enabled = true;
+        }
+    }
 }

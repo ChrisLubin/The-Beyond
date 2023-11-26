@@ -19,7 +19,7 @@ public class VehicleInteractionController : NetworkBehaviourWithLogger<VehicleIn
     {
         if (!this._seatController.IsLocalPlayerInVehicle) { return; }
 
-        if (Input.GetKeyDown(KeyCode.E))
+        if (Input.GetKeyDown(KeyCode.T))
         {
             this._logger.Log("Local player is trying to exit vehicle");
             this._networkController.ExitVehicleServerRpc();

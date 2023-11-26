@@ -107,10 +107,10 @@ GameObject:
   - component: {fileID: 2137211817578668491}
   - component: {fileID: 6410320335663052793}
   - component: {fileID: 5361520821610261326}
+  - component: {fileID: 142534744225898116}
   - component: {fileID: 6922613489873768806}
   - component: {fileID: 8458029914192762649}
   - component: {fileID: 8530446491488748256}
-  - component: {fileID: 8062854479250112323}
   - component: {fileID: 4417634948057106676}
   m_Layer: 0
   m_Name: Spaceship
@@ -381,6 +381,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71d6edb2c1774e84c96b34f0bcc2edc8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &142534744225898116
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1202538380855617741}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd416d05b525efc4f9f33545f7d02936, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _camera: {fileID: 4373242341973291343}
+  _cameraTarget: {fileID: 3588227616070840232}
 --- !u!114 &6922613489873768806
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -398,6 +412,7 @@ MonoBehaviour:
   - {fileID: 2218123358872380280}
   - {fileID: 647646328335506147}
   - {fileID: 9075563995933420801}
+  _exitSeatDistance: 1
 --- !u!114 &8458029914192762649
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -410,6 +425,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 958ad05baad5f6e4881cc6cf26b77115, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  DriverClientId:
+    m_InternalValue: 18446744073709551614
 --- !u!114 &8530446491488748256
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -441,36 +458,6 @@ MonoBehaviour:
   _currentBoostAmount: 0
   _isBoosting: 0
   _thrustScale: 0.5
---- !u!114 &8062854479250112323
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1202538380855617741}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Actions: {fileID: -944628639613478452, guid: 4419d82f33d36e848b3ed5af4c8da37e, type: 3}
-  m_NotificationBehavior: 0
-  m_UIInputModule: {fileID: 0}
-  m_DeviceLostEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  m_DeviceRegainedEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  m_ControlsChangedEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  m_ActionEvents: []
-  m_NeverAutoSwitchControlSchemes: 0
-  m_DefaultControlScheme: 
-  m_DefaultActionMap: Player
-  m_SplitScreenIndex: -1
-  m_Camera: {fileID: 0}
 --- !u!114 &4417634948057106676
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -530,7 +517,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1874323179533801387}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 45e653bab7fb20e499bda25e1b646fea, type: 3}
   m_Name: 
