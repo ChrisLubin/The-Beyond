@@ -9,7 +9,7 @@ public class VehicleSeatController : NetworkBehaviourWithLogger<VehicleSeatContr
     private VehicleNetworkController _networkController;
     private VehicleInteractionController _interactionController;
 
-    public const ulong EMPTY_SEAT_PLAYER_ID = ulong.MaxValue;
+    public const ulong EMPTY_SEAT_PLAYER_ID = 5000;
     private const float _MAX_SEAT_DESYNC_THRESHOLD = 0.1f;
 
     [SerializeField] private List<Transform> _seatTransforms;
@@ -17,6 +17,7 @@ public class VehicleSeatController : NetworkBehaviourWithLogger<VehicleSeatContr
     public bool IsLocalPlayerDriver { get; private set; } = false;
 
     public bool HasAvailableSeat { get => this._networkController.Seats.ToArray().Any(seat => seat.PlayerId == EMPTY_SEAT_PLAYER_ID); }
+    public bool HasDriver { get => this._networkController.DriverClientId.Value != EMPTY_SEAT_PLAYER_ID; }
 
     [SerializeField] private float _exitSeatDistance = 1f;
 
@@ -34,6 +35,7 @@ public class VehicleSeatController : NetworkBehaviourWithLogger<VehicleSeatContr
         base.OnNetworkSpawn();
         if (!this.IsHost) { return; }
 
+        this._networkController.DriverClientId.Value = EMPTY_SEAT_PLAYER_ID;
         for (int i = 0; i < this._seatTransforms.Count; i++)
             this._networkController.Seats.Add(new(EMPTY_SEAT_PLAYER_ID, i));
     }

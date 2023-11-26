@@ -22,7 +22,7 @@ public class SpaceshipMovementController : NetworkBehaviour
     [SerializeField] private float _boostMultiplier = 2;
 
     [Header("Current Flight Stats")]
-    [SerializeField] private float _glide = 0f;
+    [SerializeField] private NetworkVariable<float> _glide = new(0f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     [SerializeField] private float _horizontalGlide = 0f;
     [SerializeField] private float _verticalGlide = 0f;
     [SerializeField] private float _currentBoostAmount = 0f;
@@ -40,6 +40,8 @@ public class SpaceshipMovementController : NetworkBehaviour
     private VehicleNetworkController _networkController;
 
     public Vector3 Velocity { get => this._rigidBody.velocity; }
+    public float ForwardThrust { get => this._glide.Value; }
+    public float MaxForwardThrust { get => this._thrust; }
 
     private void Awake()
     {
@@ -96,7 +98,7 @@ public class SpaceshipMovementController : NetworkBehaviour
                 currentThrust *= this._boostMultiplier;
 
             this._rigidBody.AddRelativeForce(Vector3.forward * this._thrust1d * currentThrust * Time.fixedDeltaTime);
-            this._glide = this._thrust1d * this._thrust * this._thrustScale;
+            this._glide.Value = this._thrust1d * this._thrust * this._thrustScale;
         }
 
         // Up/Down
@@ -181,8 +183,8 @@ public class SpaceshipMovementController : NetworkBehaviour
     {
         if (this._thrust1d == 0 || !this._seatController.IsDriver(MultiplayerSystem.LocalClientId))
         {
-            this._rigidBody.AddRelativeForce(Vector3.forward * this._glide * Time.fixedDeltaTime);
-            this._glide *= this._thrustGlideReduction;
+            this._rigidBody.AddRelativeForce(Vector3.forward * this._glide.Value * Time.fixedDeltaTime);
+            this._glide.Value *= this._thrustGlideReduction;
         }
         if (this._upDown1d == 0 || !this._seatController.IsDriver(MultiplayerSystem.LocalClientId))
         {
