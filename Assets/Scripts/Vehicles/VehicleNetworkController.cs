@@ -7,6 +7,7 @@ public class VehicleNetworkController : NetworkBehaviour
 {
     private VehicleSeatController _seatController;
     private VehicleInteractionController _interactionController;
+    private SpaceshipMovementController _movementController;
 
     public NetworkList<SeatData> Seats;
     public NetworkVariable<ulong> DriverClientId = new(NO_DRIVER_CLIENT_ID, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
@@ -16,6 +17,7 @@ public class VehicleNetworkController : NetworkBehaviour
         this.Seats = new();
         this._seatController = GetComponent<VehicleSeatController>();
         this._interactionController = GetComponent<VehicleInteractionController>();
+        this._movementController = GetComponent<SpaceshipMovementController>();
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -38,12 +40,16 @@ public class VehicleNetworkController : NetworkBehaviour
     }
 
     [ServerRpc(RequireOwnership = false)]
-    public void ExitVehicleServerRpc(ServerRpcParams serverRpcParams = default)
+    public void ExitVehicleServerRpc(Vector3 vehicleVelocity = default, ServerRpcParams serverRpcParams = default)
     {
         ulong playerClientId = serverRpcParams.Receive.SenderClientId;
         if (!this._seatController.CanRemovePlayer(playerClientId)) { return; }
+        bool wasPlayerDriver = this.DriverClientId.Value == playerClientId;
 
         this._seatController.RemovePlayer(playerClientId);
+        if (wasPlayerDriver)
+            this._movementController.Velocity = vehicleVelocity; // Used so momentum is carried between owner changes
+
         this.ExitVehicleClientRpc(playerClientId);
     }
 

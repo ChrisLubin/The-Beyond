@@ -36,14 +36,14 @@ public class SpaceshipMovementController : NetworkBehaviour
     private Vector2 _pitchYaw;
 
     private Rigidbody _rigidBody;
-    private VehicleInteractionController _interactionController;
     private VehicleSeatController _seatController;
     private VehicleNetworkController _networkController;
+
+    public Vector3 Velocity { get => this._rigidBody.velocity; set => this._rigidBody.velocity = value; }
 
     private void Awake()
     {
         this._rigidBody = GetComponent<Rigidbody>();
-        this._interactionController = GetComponent<VehicleInteractionController>();
         this._seatController = GetComponent<VehicleSeatController>();
         this._networkController = GetComponent<VehicleNetworkController>();
     }
@@ -53,22 +53,25 @@ public class SpaceshipMovementController : NetworkBehaviour
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
-        this._interactionController.OnDidInteraction += this.OnDidInteraction;
         this._networkController.DriverClientId.OnValueChanged += this.OnDriverChange;
+
+        if (this.IsHost)
+            this.enabled = true;
     }
 
     public override void OnDestroy()
     {
         base.OnDestroy();
-        this._interactionController.OnDidInteraction -= this.OnDidInteraction;
         this._networkController.DriverClientId.OnValueChanged -= this.OnDriverChange;
     }
 
     private void FixedUpdate()
     {
-        if (!this.IsOwner || !this._seatController.IsDriver(MultiplayerSystem.LocalClientId)) { return; }
-
+        if (!this.IsOwner) { return; }
         HandleInputs();
+        HandleGliding();
+
+        if (!this._seatController.IsDriver(MultiplayerSystem.LocalClientId)) { return; }
         HandleBoosting();
         HandleMovement();
     }
@@ -95,11 +98,6 @@ public class SpaceshipMovementController : NetworkBehaviour
             this._rigidBody.AddRelativeForce(Vector3.forward * this._thrust1d * currentThrust * Time.fixedDeltaTime);
             this._glide = this._thrust1d * this._thrust * this._thrustScale;
         }
-        else
-        {
-            this._rigidBody.AddRelativeForce(Vector3.forward * this._glide * Time.fixedDeltaTime);
-            this._glide *= this._thrustGlideReduction;
-        }
 
         // Up/Down
         if (this._upDown1d == 1 || this._upDown1d == -1)
@@ -107,22 +105,12 @@ public class SpaceshipMovementController : NetworkBehaviour
             this._rigidBody.AddRelativeForce(Vector3.up * this._upDown1d * this._upThrust * this._thrustScale * Time.fixedDeltaTime);
             this._verticalGlide = this._upDown1d * this._upThrust * this._thrustScale;
         }
-        else
-        {
-            this._rigidBody.AddRelativeForce(Vector3.up * this._verticalGlide * Time.fixedDeltaTime);
-            this._verticalGlide *= this._upDownGlideReduction;
-        }
 
         // Strafing
         if (this._strafe1d == 1 || this._strafe1d == -1)
         {
             this._rigidBody.AddRelativeForce(Vector3.right * this._strafe1d * this._strafeThrust * this._thrustScale * Time.fixedDeltaTime);
             this._horizontalGlide = this._strafe1d * this._strafeThrust * this._thrustScale;
-        }
-        else
-        {
-            this._rigidBody.AddRelativeForce(Vector3.right * this._horizontalGlide * Time.fixedDeltaTime);
-            this._horizontalGlide *= this._leftRightGlideReduction;
         }
     }
 
@@ -189,21 +177,26 @@ public class SpaceshipMovementController : NetworkBehaviour
         this._isBoosting = Input.GetKey(KeyCode.LeftShift);
     }
 
-    private void OnDidInteraction(InteractionType interaction)
+    private void HandleGliding()
     {
-        switch (interaction)
+        if (this._thrust1d == 0 || !this._seatController.IsDriver(MultiplayerSystem.LocalClientId))
         {
-            case InteractionType.EnterVehicle:
-                if (this._seatController.IsDriver(MultiplayerSystem.LocalClientId))
-                    this.enabled = true;
-                break;
-            case InteractionType.ExitVehicle:
-                this.enabled = false;
-                break;
-            default:
-                break;
+            this._rigidBody.AddRelativeForce(Vector3.forward * this._glide * Time.fixedDeltaTime);
+            this._glide *= this._thrustGlideReduction;
+        }
+        if (this._upDown1d == 0 || !this._seatController.IsDriver(MultiplayerSystem.LocalClientId))
+        {
+            this._rigidBody.AddRelativeForce(Vector3.up * this._verticalGlide * Time.fixedDeltaTime);
+            this._verticalGlide *= this._upDownGlideReduction;
+        }
+        if (this._strafe1d == 0 || !this._seatController.IsDriver(MultiplayerSystem.LocalClientId))
+        {
+            this._rigidBody.AddRelativeForce(Vector3.right * this._horizontalGlide * Time.fixedDeltaTime);
+            this._horizontalGlide *= this._leftRightGlideReduction;
         }
     }
 
+    public override void OnGainedOwnership() => this.enabled = true;
+    public override void OnLostOwnership() => this.enabled = false;
     private void OnDriverChange(ulong _, ulong newDriverId) => this.enabled = newDriverId == MultiplayerSystem.LocalClientId;
 }
