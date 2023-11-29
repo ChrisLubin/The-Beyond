@@ -5,7 +5,6 @@ public class VehicleInteractionController : NetworkBehaviourWithLogger<VehicleIn
 {
     private VehicleNetworkController _networkController;
     private VehicleSeatController _seatController;
-    private SpaceshipMovementController _movementController;
 
     public event Action<InteractionType> OnDidInteraction;
 
@@ -14,7 +13,6 @@ public class VehicleInteractionController : NetworkBehaviourWithLogger<VehicleIn
         base.Awake();
         this._networkController = GetComponent<VehicleNetworkController>();
         this._seatController = GetComponent<VehicleSeatController>();
-        this._movementController = GetComponent<SpaceshipMovementController>();
     }
 
     private void Update()
@@ -24,12 +22,12 @@ public class VehicleInteractionController : NetworkBehaviourWithLogger<VehicleIn
         if (Input.GetKeyDown(KeyCode.T))
         {
             this._logger.Log("Local player is trying to exit vehicle");
-            this._networkController.ExitVehicleServerRpc(this._movementController.Velocity);
+            this._networkController.ExitVehicleServerRpc();
         }
         if (Input.GetKeyDown(KeyCode.C))
         {
             this._logger.Log("Local player is trying to change seats");
-            this._networkController.ChangeSeatServerRpc(this._movementController.Velocity);
+            this._networkController.ChangeSeatServerRpc();
         }
     }
 

@@ -74,8 +74,22 @@ public abstract class NetworkBehaviourWithLogger<T> : NetworkBehaviour where T :
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
-        this._logger = new Logger($"{GetType().Name} - {this.OwnerClientId}");
+        this.ResetLogger();
     }
+
+    public override void OnGainedOwnership()
+    {
+        base.OnGainedOwnership();
+        this.ResetLogger();
+    }
+
+    public override void OnLostOwnership()
+    {
+        base.OnLostOwnership();
+        this.ResetLogger();
+    }
+
+    private void ResetLogger() => this._logger = new Logger($"{GetType().Name} - {this.OwnerClientId}");
 }
 
 public abstract class NetworkedStaticInstanceWithLogger<T> : NetworkedStaticInstance<T> where T : NetworkBehaviour

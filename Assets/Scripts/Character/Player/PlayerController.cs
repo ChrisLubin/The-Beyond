@@ -1,20 +1,24 @@
 using System;
 using StarterAssets;
+using Unity.Netcode.Components;
 using UnityEngine;
 
-public class PlayerController : NetworkBehaviorAutoDisable<PlayerController>
+public class PlayerController : NetworkBehaviorAutoDisableWithLogger<PlayerController>, IGravityWellObject
 {
     private PlayerCameraController _cameraController;
     private CharacterController _characterController;
     private ThirdPersonController _thirdPersonController;
+    private NetworkTransform _networkTransform;
 
     public static event Action<ulong, PlayerController> OnSpawn;
 
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         this._cameraController = GetComponent<PlayerCameraController>();
         this._characterController = GetComponent<CharacterController>();
         this._thirdPersonController = GetComponent<ThirdPersonController>();
+        this._networkTransform = GetComponent<NetworkTransform>();
     }
 
     public override void OnNetworkSpawn()
@@ -40,4 +44,15 @@ public class PlayerController : NetworkBehaviorAutoDisable<PlayerController>
     }
 
     private void OnThirdPersonCameraReached() => InputSystem.isEnabled = true;
+    public bool CanBeReParented() => !this._networkTransform.InLocalSpace;
+
+    private void OnTransformParentChanged()
+    {
+        if (!this.IsOwner) { return; }
+        bool isParented = transform.parent != null;
+        this._networkTransform.InLocalSpace = isParented;
+
+        if (transform.parent != null && transform.parent.CompareTag(Constants.TagNames.GravityWellContainer))
+            this._logger.Log("Entered gravity well");
+    }
 }

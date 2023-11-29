@@ -1,7 +1,6 @@
 using Unity.Netcode;
 using UnityEngine;
 using static VehicleSeatController;
-using Cysharp.Threading.Tasks;
 
 public class VehicleNetworkController : NetworkBehaviour
 {
@@ -11,6 +10,7 @@ public class VehicleNetworkController : NetworkBehaviour
 
     public NetworkList<SeatData> Seats;
     public NetworkVariable<ulong> DriverClientId = new(EMPTY_SEAT_PLAYER_ID, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public NetworkVariable<Vector3> Velocity = new(Vector3.zero, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
     private void Awake()
     {
@@ -40,7 +40,7 @@ public class VehicleNetworkController : NetworkBehaviour
     }
 
     [ServerRpc(RequireOwnership = false)]
-    public void ExitVehicleServerRpc(Vector3 vehicleVelocity = default, ServerRpcParams serverRpcParams = default)
+    public void ExitVehicleServerRpc(ServerRpcParams serverRpcParams = default)
     {
         ulong playerClientId = serverRpcParams.Receive.SenderClientId;
         if (!this._seatController.CanRemovePlayer(playerClientId)) { return; }
@@ -50,42 +50,35 @@ public class VehicleNetworkController : NetworkBehaviour
         this.ExitVehicleClientRpc(playerClientId);
 
         if (wasPlayerDriver)
-            this._movementController.SetVelocity(vehicleVelocity);
+            this._movementController.SetRigidBodyVelocity();
     }
 
     [ClientRpc]
-    public void ExitVehicleClientRpc(ulong playerId) => this.ExitVehicle(playerId);
-
-    private async void ExitVehicle(ulong playerId)
+    public void ExitVehicleClientRpc(ulong playerId)
     {
         if (playerId == MultiplayerSystem.LocalClientId)
             this._interactionController.DidInteraction(InteractionType.ExitVehicle);
-        else
-        {
-            await UniTask.WaitForSeconds(3f);
-            if (!this._seatController.isInVehicle(playerId) && PlayerManager.Instance.TryGetPlayer(playerId, out PlayerController player))
-                player.GetComponent<CharacterController>().enabled = true;
-        }
+        else if (!this._seatController.isInVehicle(playerId) && PlayerManager.Instance.TryGetPlayer(playerId, out PlayerController player))
+            player.GetComponent<CharacterController>().enabled = true;
     }
 
     [ServerRpc(RequireOwnership = false)]
-    public void ChangeSeatServerRpc(Vector3 clientVehicleVelocity = default, ServerRpcParams serverRpcParams = default)
+    public void ChangeSeatServerRpc(ServerRpcParams serverRpcParams = default)
     {
         ulong playerClientId = serverRpcParams.Receive.SenderClientId;
         if (!this._seatController.CanChangeSeat(playerClientId)) { return; }
         bool wasPlayerDriver = this.DriverClientId.Value == playerClientId;
-        Vector3 hostVehicleVelocity = this._movementController.Velocity;
 
         this._seatController.ChangeSeat(playerClientId);
 
         if (wasPlayerDriver)
-            this._movementController.SetVelocity(clientVehicleVelocity);
+            this._movementController.SetRigidBodyVelocity();
 
         bool isPlayerNowDriver = this.DriverClientId.Value == playerClientId;
         if (isPlayerNowDriver)
-            this.ChangeSeatClientRpc(hostVehicleVelocity, playerClientId.GenerateRpcParamsToClient());
+            this.ChangeSeatClientRpc(playerClientId.GenerateRpcParamsToClient());
     }
 
     [ClientRpc]
-    public void ChangeSeatClientRpc(Vector3 vehicleVelocity, ClientRpcParams _ = default) => this._movementController.SetVelocity(vehicleVelocity);
+    public void ChangeSeatClientRpc(ClientRpcParams _ = default) => this._movementController.SetRigidBodyVelocity();
 }

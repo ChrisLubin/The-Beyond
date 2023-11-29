@@ -1,9 +1,15 @@
 using Unity.Netcode;
+using Unity.Netcode.Components;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
-public class SpaceshipMovementController : NetworkBehaviour
+public class SpaceshipMovementController : NetworkBehaviourWithLogger<SpaceshipMovementController>, IGravityWellObject
 {
+    private Rigidbody _rigidBody;
+    private VehicleSeatController _seatController;
+    private VehicleNetworkController _networkController;
+    private NetworkTransform _networkTransform;
+
     [Header("Movement Attributes")]
     [SerializeField] private float _yawTorque = 100f;
     [SerializeField] private float _pitchTorque = 100f;
@@ -21,6 +27,10 @@ public class SpaceshipMovementController : NetworkBehaviour
     [SerializeField] private float _boostRechargeRate = 5f;
     [SerializeField] private float _boostMultiplier = 2;
 
+    [Header("Gravity Well Attributes")]
+    [SerializeField, Range(0.001f, 0.999f)] private float _enterGravityWellVelocityMultiplier = 0.1f;
+    [SerializeField] private float _enterGravityWellVelocityThreshold = 6f;
+
     [Header("Current Flight Stats")]
     [SerializeField] private NetworkVariable<float> _glide = new(0f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     [SerializeField] private float _horizontalGlide = 0f;
@@ -35,19 +45,16 @@ public class SpaceshipMovementController : NetworkBehaviour
     private int _roll1d;
     private Vector2 _pitchYaw;
 
-    private Rigidbody _rigidBody;
-    private VehicleSeatController _seatController;
-    private VehicleNetworkController _networkController;
-
-    public Vector3 Velocity { get => this._rigidBody.velocity; }
     public float ForwardThrust { get => this._glide.Value; }
     public float MaxForwardThrust { get => this._thrust; }
 
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         this._rigidBody = GetComponent<Rigidbody>();
         this._seatController = GetComponent<VehicleSeatController>();
         this._networkController = GetComponent<VehicleNetworkController>();
+        this._networkTransform = GetComponent<NetworkTransform>();
     }
 
     private void Start() => this._currentBoostAmount = this._maxBoostAmount;
@@ -72,6 +79,7 @@ public class SpaceshipMovementController : NetworkBehaviour
         if (!this.IsOwner) { return; }
         HandleInputs();
         HandleGliding();
+        this._networkController.Velocity.Value = this._rigidBody.velocity;
 
         if (!this._seatController.IsDriver(MultiplayerSystem.LocalClientId)) { return; }
         HandleBoosting();
@@ -198,8 +206,33 @@ public class SpaceshipMovementController : NetworkBehaviour
         }
     }
 
-    public override void OnGainedOwnership() => this.enabled = true;
-    public override void OnLostOwnership() => this.enabled = false;
+    private void OnTransformParentChanged()
+    {
+        if (!this.IsOwner) { return; }
+        bool isParented = transform.parent != null;
+
+        if (isParented)
+            this._rigidBody.velocity *= this._enterGravityWellVelocityMultiplier;
+
+        this._networkTransform.InLocalSpace = isParented;
+
+        if (transform.parent == null || transform.parent.CompareTag(Constants.TagNames.GravityWellContainer))
+            this._logger.Log($"{(isParented ? "Entered" : "Exited")} gravity well");
+    }
+
+    public override void OnGainedOwnership()
+    {
+        base.OnGainedOwnership();
+        this.enabled = true;
+    }
+
+    public override void OnLostOwnership()
+    {
+        base.OnLostOwnership();
+        this.enabled = false;
+    }
+
     private void OnDriverChange(ulong _, ulong newDriverId) => this.enabled = newDriverId == MultiplayerSystem.LocalClientId;
-    public void SetVelocity(Vector3 velocity) => this._rigidBody.velocity = velocity; // Used so momentum is carried between owner changes
+    public void SetRigidBodyVelocity() => this._rigidBody.velocity = this._networkController.Velocity.Value; // Used so momentum is carried between owner changes
+    public bool CanBeReParented() => this._networkController.Velocity.Value.magnitude < this._enterGravityWellVelocityThreshold;
 }

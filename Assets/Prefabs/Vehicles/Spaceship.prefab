@@ -430,6 +430,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   DriverClientId:
     m_InternalValue: 18446744073709551614
+  Velocity:
+    m_InternalValue: {x: 0, y: 0, z: 0}
 --- !u!114 &8530446491488748256
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -455,6 +457,8 @@ MonoBehaviour:
   _boostDeprecationRate: 10
   _boostRechargeRate: 5
   _boostMultiplier: 2
+  _enterGravityWellVelocityMultiplier: 0.1
+  _enterGravityWellVelocityThreshold: 6
   _glide:
     m_InternalValue: 0
   _horizontalGlide: 0
@@ -496,6 +500,7 @@ MonoBehaviour:
   _forwardThrusters:
   - {fileID: 6414054939251690636}
   - {fileID: 2833739138529284726}
+  _forwardThrustersTurningOffSimSpeed: 0.25
   _forwardThrusterMinSize: 0.6
   _forwardThrusterMaxSize: 1.2
   _forwardThrusterMinSimSpeed: 0.7
