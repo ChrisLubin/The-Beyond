@@ -31,9 +31,7 @@ public class PlayerManager : NetworkedStaticInstanceWithLogger<PlayerManager>
         GameManager.OnStateChange -= this.OnGameStateChange;
         PlayerController.OnSpawn -= this.OnSpawn;
         if (MultiplayerSystem.Instance != null)
-        {
             MultiplayerSystem.Instance.PlayerData.OnListChanged -= this.OnPlayerDataChanged;
-        }
     }
 
     private void OnGameStateChange(GameState state)

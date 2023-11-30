@@ -48,6 +48,11 @@ public class SpaceshipMovementController : NetworkBehaviourWithLogger<SpaceshipM
     public float ForwardThrust { get => this._glide.Value; }
     public float MaxForwardThrust { get => this._thrust; }
 
+    public static float CurrentThrottle { get; protected set; } = 0.5f;
+    public static float CurrentBoost { get; protected set; } = 1f;
+    public static bool IsLocalPlayerInVehicle { get; protected set; } = false;
+    public static bool IsLocalPlayerDriver { get; protected set; } = false;
+
     protected override void Awake()
     {
         base.Awake();
@@ -59,23 +64,10 @@ public class SpaceshipMovementController : NetworkBehaviourWithLogger<SpaceshipM
 
     private void Start() => this._currentBoostAmount = this._maxBoostAmount;
 
-    public override void OnNetworkSpawn()
-    {
-        base.OnNetworkSpawn();
-        this._networkController.DriverClientId.OnValueChanged += this.OnDriverChange;
-
-        if (this.IsHost)
-            this.enabled = true;
-    }
-
-    public override void OnDestroy()
-    {
-        base.OnDestroy();
-        this._networkController.DriverClientId.OnValueChanged -= this.OnDriverChange;
-    }
-
     private void FixedUpdate()
     {
+        this.UpdateStaticValues();
+
         if (!this.IsOwner) { return; }
         HandleInputs();
         HandleGliding();
@@ -128,13 +120,13 @@ public class SpaceshipMovementController : NetworkBehaviourWithLogger<SpaceshipM
     {
         if (this._isBoosting && this._currentBoostAmount > 0f)
         {
-            this._currentBoostAmount -= this._boostDeprecationRate;
+            this._currentBoostAmount = Mathf.Clamp(this._currentBoostAmount - this._boostDeprecationRate, 0f, this._maxBoostAmount);
 
             if (this._currentBoostAmount <= 0f)
                 this._isBoosting = false;
         }
         else if (this._currentBoostAmount < this._maxBoostAmount)
-            this._currentBoostAmount += this._boostRechargeRate;
+            this._currentBoostAmount = Mathf.Clamp(this._currentBoostAmount + this._boostRechargeRate, 0f, this._maxBoostAmount);
     }
 
     private void HandleInputs()
@@ -206,6 +198,14 @@ public class SpaceshipMovementController : NetworkBehaviourWithLogger<SpaceshipM
         }
     }
 
+    private void UpdateStaticValues()
+    {
+        SpaceshipMovementController.CurrentThrottle = this._thrustScale;
+        SpaceshipMovementController.CurrentBoost = this._currentBoostAmount / this._maxBoostAmount;
+        SpaceshipMovementController.IsLocalPlayerInVehicle = this._seatController.IsLocalPlayerInVehicle;
+        SpaceshipMovementController.IsLocalPlayerDriver = this._seatController.IsLocalPlayerDriver;
+    }
+
     private void OnTransformParentChanged()
     {
         if (!this.IsOwner) { return; }
@@ -220,19 +220,6 @@ public class SpaceshipMovementController : NetworkBehaviourWithLogger<SpaceshipM
             this._logger.Log($"{(isParented ? "Entered" : "Exited")} gravity well");
     }
 
-    public override void OnGainedOwnership()
-    {
-        base.OnGainedOwnership();
-        this.enabled = true;
-    }
-
-    public override void OnLostOwnership()
-    {
-        base.OnLostOwnership();
-        this.enabled = false;
-    }
-
-    private void OnDriverChange(ulong _, ulong newDriverId) => this.enabled = newDriverId == MultiplayerSystem.LocalClientId;
     public void SetRigidBodyVelocity() => this._rigidBody.velocity = this._networkController.Velocity.Value; // Used so momentum is carried between owner changes
     public bool CanBeReParented() => this._networkController.Velocity.Value.magnitude < this._enterGravityWellVelocityThreshold;
 }

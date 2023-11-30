@@ -3,9 +3,9 @@ using System;
 
 public class PlayerInteractorController : NetworkBehaviorAutoDisable<PlayerInteractorController>
 {
-    public event Action<InteractionType> OnDidInteraction;
-
     [SerializeField] private float _maxInteractDistance = 2f;
+
+    public event Action<InteractionType> OnDidInteraction;
 
     private void Update()
     {

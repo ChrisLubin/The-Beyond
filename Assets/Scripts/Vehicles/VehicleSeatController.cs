@@ -14,7 +14,7 @@ public class VehicleSeatController : NetworkBehaviourWithLogger<VehicleSeatContr
 
     [SerializeField] private List<Transform> _seatTransforms;
     public bool IsLocalPlayerInVehicle { get; private set; } = false;
-    public bool IsLocalPlayerDriver { get; private set; } = false;
+    public bool IsLocalPlayerDriver => this._networkController.DriverClientId.Value == MultiplayerSystem.LocalClientId;
 
     public bool HasAvailableSeat { get => this._networkController.Seats.ToArray().Any(seat => seat.PlayerId == EMPTY_SEAT_PLAYER_ID); }
     public bool HasDriver { get => this._networkController.DriverClientId.Value != EMPTY_SEAT_PLAYER_ID; }
