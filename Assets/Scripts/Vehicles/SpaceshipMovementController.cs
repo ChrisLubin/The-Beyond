@@ -50,8 +50,10 @@ public class SpaceshipMovementController : NetworkBehaviourWithLogger<SpaceshipM
 
     public static float CurrentThrottle { get; protected set; } = 0.5f;
     public static float CurrentBoost { get; protected set; } = 1f;
+    public static float CurrentVelocityMph { get; protected set; } = 0f;
     public static bool IsLocalPlayerInVehicle { get; protected set; } = false;
     public static bool IsLocalPlayerDriver { get; protected set; } = false;
+    private static float _METERS_PER_SECOND_TO_MILES_PER_HOUR = 2.23694f;
 
     protected override void Awake()
     {
@@ -202,6 +204,7 @@ public class SpaceshipMovementController : NetworkBehaviourWithLogger<SpaceshipM
     {
         SpaceshipMovementController.CurrentThrottle = this._thrustScale;
         SpaceshipMovementController.CurrentBoost = this._currentBoostAmount / this._maxBoostAmount;
+        SpaceshipMovementController.CurrentVelocityMph = this._networkController.Velocity.Value.magnitude * _METERS_PER_SECOND_TO_MILES_PER_HOUR;
         SpaceshipMovementController.IsLocalPlayerInVehicle = this._seatController.IsLocalPlayerInVehicle;
         SpaceshipMovementController.IsLocalPlayerDriver = this._seatController.IsLocalPlayerDriver;
     }
