@@ -10,6 +10,8 @@ public class PlayerCameraController : NetworkBehaviorAutoDisable<PlayerCameraCon
 
     public event Action OnThirdPersonCameraReached;
 
+    public static CinemachineVirtualCamera LOCAL_PLAYER_CAMERA { get; private set; }
+
     protected override void OnOwnerNetworkSpawn()
     {
         CinemachineBlendEventController.OnBlendFinished += this.OnBlendFinished;
@@ -24,6 +26,13 @@ public class PlayerCameraController : NetworkBehaviorAutoDisable<PlayerCameraCon
         if (!this.IsOwner) { return; }
 
         CinemachineBlendEventController.OnBlendFinished -= this.OnBlendFinished;
+    }
+
+    private void Update()
+    {
+        if (!this.IsOwner) { return; }
+
+        PlayerCameraController.LOCAL_PLAYER_CAMERA = this._firstPersonCamera.enabled ? this._firstPersonCamera : this._thirdPersonCamera;
     }
 
     private void OnBlendFinished(ICinemachineCamera blendedCamera)
