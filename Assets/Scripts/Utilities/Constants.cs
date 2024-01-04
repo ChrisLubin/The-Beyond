@@ -4,6 +4,7 @@ public static class Constants
     {
         public static string Player = "Player";
         public static string GravityWellContainer = "GravityWellContainer";
+        public static string Vehicle = "Vehicle";
     }
 
     public static class LayerNames

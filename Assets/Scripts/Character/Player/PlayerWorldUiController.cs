@@ -15,12 +15,4 @@ public class PlayerWorldUiController : NetworkBehaviour
         else
             this._name.text = MultiplayerSystem.Instance.GetPlayerUsername(this.OwnerClientId);
     }
-
-    private void LateUpdate()
-    {
-        if (this.IsOwner) { return; }
-
-        if (PlayerCameraController.LOCAL_PLAYER_CAMERA != null)
-            this._name.transform.LookAt(PlayerCameraController.LOCAL_PLAYER_CAMERA.transform);
-    }
 }
