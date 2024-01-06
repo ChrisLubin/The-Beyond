@@ -1,4 +1,5 @@
 using System;
+using Cysharp.Threading.Tasks;
 using StarterAssets;
 using Unity.Netcode.Components;
 using UnityEngine;
@@ -21,10 +22,16 @@ public class PlayerController : NetworkBehaviorAutoDisableWithLogger<PlayerContr
         this._networkTransform = GetComponent<NetworkTransform>();
     }
 
-    public override void OnNetworkSpawn()
+    public async override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
         PlayerController.OnSpawn?.Invoke(this.OwnerClientId, this);
+
+        if (!this.IsOwner)
+        {
+            await UniTask.Delay(3000);
+            this._characterController.enabled = true;
+        }
     }
 
     protected override void OnOwnerNetworkSpawn()
@@ -46,7 +53,6 @@ public class PlayerController : NetworkBehaviorAutoDisableWithLogger<PlayerContr
         InputSystem.isEnabled = true;
         this._characterController.enabled = true;
         this._thirdPersonController.enabled = true;
-
     }
     public bool CanBeReParented() => !this._networkTransform.InLocalSpace;
 
