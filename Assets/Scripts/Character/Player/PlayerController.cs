@@ -30,8 +30,6 @@ public class PlayerController : NetworkBehaviorAutoDisableWithLogger<PlayerContr
     protected override void OnOwnerNetworkSpawn()
     {
         this._cameraController.OnThirdPersonCameraReached += this.OnThirdPersonCameraReached;
-        this._characterController.enabled = true;
-        this._thirdPersonController.enabled = true;
     }
 
     public override void OnDestroy()
@@ -43,7 +41,13 @@ public class PlayerController : NetworkBehaviorAutoDisableWithLogger<PlayerContr
         this._cameraController.OnThirdPersonCameraReached -= this.OnThirdPersonCameraReached;
     }
 
-    private void OnThirdPersonCameraReached() => InputSystem.isEnabled = true;
+    private void OnThirdPersonCameraReached()
+    {
+        InputSystem.isEnabled = true;
+        this._characterController.enabled = true;
+        this._thirdPersonController.enabled = true;
+
+    }
     public bool CanBeReParented() => !this._networkTransform.InLocalSpace;
 
     private void OnTransformParentChanged()
