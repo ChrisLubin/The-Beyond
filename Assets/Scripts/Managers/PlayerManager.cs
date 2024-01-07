@@ -85,12 +85,13 @@ public class PlayerManager : NetworkedStaticInstanceWithLogger<PlayerManager>
         }
 
         Transform spawnTransform = this._playerSpawnPoints[clientId % 2 == 0 ? 0 : 1];
-        Transform playerTransform = Instantiate(this._playerPrefab, Debug.isDebugBuild ? this._debugSpawnPoint.position : spawnTransform.position, spawnTransform.rotation);
+        Transform playerTransform = Instantiate(this._playerPrefab, this.GetSpawnPoint(clientId), spawnTransform.rotation);
         NetworkObject playerNetworkObject = playerTransform.GetComponent<NetworkObject>();
         playerNetworkObject.SpawnWithOwnership(clientId);
         playerNetworkObject.TrySetParent(this._playerContainer);
         this._logger.Log($"Spawned player for {MultiplayerSystem.Instance.GetPlayerUsername(clientId)}");
     }
 
+    public Vector3 GetSpawnPoint(ulong clientId) => Debug.isDebugBuild ? this._debugSpawnPoint.position : this._playerSpawnPoints[clientId % 2 == 0 ? 0 : 1].position;
     public bool TryGetPlayer(ulong clientId, out PlayerController player) => this._alivePlayersMap.TryGetValue(clientId, out player);
 }

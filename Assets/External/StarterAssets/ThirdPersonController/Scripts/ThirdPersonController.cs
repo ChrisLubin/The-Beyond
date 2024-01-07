@@ -102,6 +102,7 @@ namespace StarterAssets
         private Animator _animator;
         private CharacterController _controller;
         private PlayerInteractorController _interactorController;
+        private PlayerResetSpawnController _resetSpawnController;
         private GameObject _mainCamera;
 
         private const float _threshold = 0.01f;
@@ -110,12 +111,15 @@ namespace StarterAssets
 
         private bool IsCurrentDeviceMouse = true;
 
+        public static float LocalPlayerCurrentFallDuration { get; private set; } = 0f;
+
         private void Awake()
         {
             _cinemachineTargetYaw = CinemachineCameraTarget.transform.rotation.eulerAngles.y;
             _hasAnimator = TryGetComponent(out _animator);
             _controller = GetComponent<CharacterController>();
             _interactorController = GetComponent<PlayerInteractorController>();
+            _resetSpawnController = GetComponent<PlayerResetSpawnController>();
 
             // get a reference to our main camera
             if (_mainCamera == null)
@@ -141,6 +145,7 @@ namespace StarterAssets
             if (this.IsOwner)
             {
                 this._interactorController.OnDidInteraction += this.OnPlayerDidInteraction;
+                this._resetSpawnController.OnSpawnReset += this.OnSpawnReset;
             }
         }
 
@@ -151,6 +156,7 @@ namespace StarterAssets
             if (this.IsOwner)
             {
                 this._interactorController.OnDidInteraction -= this.OnPlayerDidInteraction;
+                this._resetSpawnController.OnSpawnReset -= this.OnSpawnReset;
             }
         }
 
@@ -193,6 +199,8 @@ namespace StarterAssets
                     break;
             }
         }
+
+        private void OnSpawnReset() => LocalPlayerCurrentFallDuration = 0f;
 
         private void GroundedCheck()
         {
@@ -301,6 +309,9 @@ namespace StarterAssets
         {
             if (Grounded)
             {
+                if (this.IsOwner)
+                    LocalPlayerCurrentFallDuration = 0f;
+
                 // reset the fall timeout timer
                 _fallTimeoutDelta = FallTimeout;
 
@@ -338,6 +349,9 @@ namespace StarterAssets
             }
             else
             {
+                if (this.IsOwner)
+                    LocalPlayerCurrentFallDuration += Time.deltaTime;
+
                 // reset the jump timeout timer
                 _jumpTimeoutDelta = JumpTimeout;
 

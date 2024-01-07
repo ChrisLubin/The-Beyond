@@ -1,13 +1,10 @@
 using System;
-using Cysharp.Threading.Tasks;
 using StarterAssets;
 using Unity.Netcode.Components;
-using UnityEngine;
 
 public class PlayerController : NetworkBehaviorAutoDisableWithLogger<PlayerController>, IGravityWellObject
 {
     private PlayerCameraController _cameraController;
-    private CharacterController _characterController;
     private ThirdPersonController _thirdPersonController;
     private NetworkTransform _networkTransform;
 
@@ -17,26 +14,20 @@ public class PlayerController : NetworkBehaviorAutoDisableWithLogger<PlayerContr
     {
         base.Awake();
         this._cameraController = GetComponent<PlayerCameraController>();
-        this._characterController = GetComponent<CharacterController>();
         this._thirdPersonController = GetComponent<ThirdPersonController>();
         this._networkTransform = GetComponent<NetworkTransform>();
     }
 
-    public async override void OnNetworkSpawn()
+    public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
         PlayerController.OnSpawn?.Invoke(this.OwnerClientId, this);
-
-        if (!this.IsOwner)
-        {
-            await UniTask.Delay(3000);
-            this._characterController.enabled = true;
-        }
     }
 
     protected override void OnOwnerNetworkSpawn()
     {
         this._cameraController.OnThirdPersonCameraReached += this.OnThirdPersonCameraReached;
+        this._thirdPersonController.enabled = true;
     }
 
     public override void OnDestroy()
@@ -48,12 +39,7 @@ public class PlayerController : NetworkBehaviorAutoDisableWithLogger<PlayerContr
         this._cameraController.OnThirdPersonCameraReached -= this.OnThirdPersonCameraReached;
     }
 
-    private void OnThirdPersonCameraReached()
-    {
-        InputSystem.isEnabled = true;
-        this._characterController.enabled = true;
-        this._thirdPersonController.enabled = true;
-    }
+    private void OnThirdPersonCameraReached() => InputSystem.isEnabled = true;
     public bool CanBeReParented() => !this._networkTransform.InLocalSpace;
 
     private void OnTransformParentChanged()
