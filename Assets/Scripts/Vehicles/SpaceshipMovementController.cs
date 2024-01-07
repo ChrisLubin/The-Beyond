@@ -7,6 +7,7 @@ public class SpaceshipMovementController : NetworkBehaviourWithLogger<SpaceshipM
 {
     private Rigidbody _rigidBody;
     private VehicleSeatController _seatController;
+    private VehicleInteractionController _interactionController;
     private VehicleNetworkController _networkController;
     private NetworkTransform _networkTransform;
 
@@ -53,22 +54,31 @@ public class SpaceshipMovementController : NetworkBehaviourWithLogger<SpaceshipM
     public static float CurrentVelocityMph { get; protected set; } = 0f;
     public static bool IsLocalPlayerInVehicle { get; protected set; } = false;
     public static bool IsLocalPlayerDriver { get; protected set; } = false;
-    private static float _METERS_PER_SECOND_TO_MILES_PER_HOUR = 2.23694f;
+    private const float _METERS_PER_SECOND_TO_MILES_PER_HOUR = 2.23694f;
 
     protected override void Awake()
     {
         base.Awake();
         this._rigidBody = GetComponent<Rigidbody>();
         this._seatController = GetComponent<VehicleSeatController>();
+        this._interactionController = GetComponent<VehicleInteractionController>();
+        this._interactionController.OnDidInteraction += this.OnDidInteraction;
         this._networkController = GetComponent<VehicleNetworkController>();
         this._networkTransform = GetComponent<NetworkTransform>();
     }
 
     private void Start() => this._currentBoostAmount = this._maxBoostAmount;
 
+    public override void OnDestroy()
+    {
+        base.OnDestroy();
+        this._interactionController.OnDidInteraction -= this.OnDidInteraction;
+    }
+
     private void FixedUpdate()
     {
-        this.UpdateStaticValues();
+        if (this._seatController.IsLocalPlayerInVehicle)
+            this.UpdateStaticValues();
 
         if (!this.IsOwner) { return; }
         HandleInputs();
@@ -221,6 +231,19 @@ public class SpaceshipMovementController : NetworkBehaviourWithLogger<SpaceshipM
 
         if (transform.parent == null || transform.parent.CompareTag(Constants.TagNames.GravityWellContainer))
             this._logger.Log($"{(isParented ? "Entered" : "Exited")} gravity well");
+    }
+
+    private void OnDidInteraction(InteractionType interaction)
+    {
+        switch (interaction)
+        {
+            case InteractionType.ExitVehicle:
+                SpaceshipMovementController.IsLocalPlayerInVehicle = false;
+                SpaceshipMovementController.IsLocalPlayerDriver = false;
+                break;
+            default:
+                break;
+        }
     }
 
     public void SetRigidBodyVelocity() => this._rigidBody.velocity = this._networkController.Velocity.Value; // Used so momentum is carried between owner changes
