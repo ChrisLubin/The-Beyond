@@ -6,9 +6,9 @@ using UnityEngine;
 public class DoorPlayerCountController : MonoBehaviour
 {
     private List<ulong> _playerIdsInDoorway = new();
-    public event Action<int> OnPlayersInDoorwayChange;
+    public event Action<int, int> OnPlayersInDoorwayChange;
 
-    private void OnPlayerEnterOrExit() => this.OnPlayersInDoorwayChange?.Invoke(this._playerIdsInDoorway.Count);
+    private void OnPlayerEnterOrExit(int oldCount) => this.OnPlayersInDoorwayChange?.Invoke(oldCount, this._playerIdsInDoorway.Count);
 
     private void OnTriggerEnter(Collider other)
     {
@@ -18,7 +18,7 @@ public class DoorPlayerCountController : MonoBehaviour
         if (this.IsInDoorWay(clientId)) { return; }
 
         this._playerIdsInDoorway.Add(clientId);
-        this.OnPlayerEnterOrExit();
+        this.OnPlayerEnterOrExit(this._playerIdsInDoorway.Count - 1);
     }
 
     private void OnTriggerExit(Collider other)
@@ -29,7 +29,7 @@ public class DoorPlayerCountController : MonoBehaviour
         if (!this.IsInDoorWay(clientId)) { return; }
 
         this._playerIdsInDoorway.Remove(clientId);
-        this.OnPlayerEnterOrExit();
+        this.OnPlayerEnterOrExit(this._playerIdsInDoorway.Count + 1);
     }
 
     private bool IsInDoorWay(ulong clientId) => this._playerIdsInDoorway.Exists(playerId => playerId == clientId);

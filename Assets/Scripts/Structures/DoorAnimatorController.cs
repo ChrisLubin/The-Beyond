@@ -6,6 +6,10 @@ public class DoorAnimatorController : MonoBehaviour
     private DoorPlayerCountController _playerCountController;
     [SerializeField] private int _doorTypeId;
 
+    [SerializeField] private AudioClip _openDoorAudioClip;
+    [SerializeField] private AudioClip _closeDoorAudioClip;
+    private const float _DOOR_AUDIO_VOLUME = 0.75f;
+
     private const string _PLAYERS_IN_DOORWAY_PARAMETER = "PlayersInDoorway";
     private const string _DOOR_TYPE_ID_PARAMETER = "DoorTypeId";
     private int _playersInDoorwayHash;
@@ -23,5 +27,13 @@ public class DoorAnimatorController : MonoBehaviour
     private void Start() => this._animator.SetInteger(this._doorTypeIdHash, this._doorTypeId);
     private void OnDestroy() => this._playerCountController.OnPlayersInDoorwayChange -= OnPlayersInDoorwayChange;
 
-    private void OnPlayersInDoorwayChange(int count) => this._animator.SetInteger(this._playersInDoorwayHash, count);
+    private void OnPlayersInDoorwayChange(int oldCount, int newCount)
+    {
+        if (oldCount == 0 && newCount > 0)
+            AudioSource.PlayClipAtPoint(this._openDoorAudioClip, transform.position, _DOOR_AUDIO_VOLUME);
+        else if (oldCount > 0 && newCount == 0)
+            AudioSource.PlayClipAtPoint(this._closeDoorAudioClip, transform.position, _DOOR_AUDIO_VOLUME);
+
+        this._animator.SetInteger(this._playersInDoorwayHash, newCount);
+    }
 }

@@ -25826,6 +25826,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1720220310}
     m_Modifications:
+    - target: {fileID: 1945660005914922706, guid: 7cb0f4532927b134f96647c493ce01c0, type: 3}
+      propertyPath: test
+      value: 0.75
+      objectReference: {fileID: 0}
     - target: {fileID: 6470012987593398117, guid: 7cb0f4532927b134f96647c493ce01c0, type: 3}
       propertyPath: m_Name
       value: DoubleDoor2

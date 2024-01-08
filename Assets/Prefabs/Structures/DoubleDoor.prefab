@@ -102,6 +102,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _doorTypeId: 2
+  _openDoorAudioClip: {fileID: 8300000, guid: 012e6572ce4bc7d41ac69e99f6e398c8, type: 3}
+  _closeDoorAudioClip: {fileID: 8300000, guid: c779acb3fe29de9439b3de7c9d4f8658, type: 3}
 --- !u!114 &7732109216888058563
 MonoBehaviour:
   m_ObjectHideFlags: 0
