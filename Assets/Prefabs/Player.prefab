@@ -2246,9 +2246,9 @@ MonoBehaviour:
   SyncPositionX: 1
   SyncPositionY: 1
   SyncPositionZ: 1
-  SyncRotAngleX: 0
+  SyncRotAngleX: 1
   SyncRotAngleY: 1
-  SyncRotAngleZ: 0
+  SyncRotAngleZ: 1
   SyncScaleX: 0
   SyncScaleY: 0
   SyncScaleZ: 0
@@ -2313,8 +2313,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 749f7df12feae38409b23dbe10e884b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CurrentFallDuration:
-    m_InternalValue: 0
 --- !u!114 &8794667015454989537
 MonoBehaviour:
   m_ObjectHideFlags: 0
