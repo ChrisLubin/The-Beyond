@@ -1,9 +1,12 @@
+using Unity.Netcode;
 using Unity.Netcode.Components;
 
 public class PlayerNetworkController : NetworkBehaviorAutoDisable<PlayerNetworkController>
 {
     private NetworkTransform _networkTransform;
     private PlayerInteractorController _interactorController;
+
+    public NetworkVariable<int> PlayerSkinnedMeshIndex = new(12, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
     private void Awake()
     {
